@@ -1,12 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+import { App } from './components/App/App';
+import { GraphQLProvider } from './components/GraphQLProvider';
+import { Layout } from './components/Layout';
 import reportWebVitals from './reportWebVitals';
+import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <GraphQLProvider>
+      <BrowserRouter>
+        <Layout>
+          <App />
+        </Layout>
+      </BrowserRouter>
+    </GraphQLProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
