@@ -1,24 +1,8 @@
-import { gql, useQuery, useMutation, useApolloClient } from '@apollo/client'
-import styled from '@emotion/styled';
+import { useQuery, useApolloClient } from '@apollo/client'
+import styled from '@emotion/styled'
 import {useParams}  from "react-router-dom"
-import { Stat } from './Stat';
-import { GET_MY_POKEMONS } from '../GraphQLProvider';
-
-const POKEMON_LIST = gql`
-  query pokemon_details($id: Int) {
-    species: pokemon_v2_pokemon(where: {id: {_eq: $id}}) {
-      name
-      id
-      stats: pokemon_v2_pokemonstats {
-        base_stat
-        effort
-        name: pokemon_v2_stat {
-          name
-        }
-      }
-    }
-  }
-`
+import { Stat } from './Stat'
+import { GET_MY_POKEMONS, POKEMON_DETAIL } from '../GraphQLProvider'
 
 const Card = styled.div`
   background: #74CB48;
@@ -30,7 +14,6 @@ const Head = styled.div`
   display: flex;
   justify-content: space-between
 `
-
 const Name = styled.div`
   font-style: normal;
   font-weight: bold;
@@ -39,7 +22,6 @@ const Name = styled.div`
   color: #FFFFFF;
   margin-bottom: 10px;
 `
-
 const Id = styled.div`
   font-style: normal;
   font-weight: bold;
@@ -47,13 +29,11 @@ const Id = styled.div`
   line-height: 32px;
   color: #FFFFFF;
 `
-
 const Stats = styled.div`
   background: #FFFFFF;
   border-radius: 12px;
   padding: 10px
 `
-
 const ButtonCatch = styled.div`
   cursor: pointer;
   background: #F9CF30;
@@ -65,7 +45,7 @@ const ButtonCatch = styled.div`
   border-radius: 10px;
 `
 
-async function HeadleCatch(client, pokemon){
+async function headleCatch(client, pokemon){
   const result = Math.random() < 0.5
 
   if(result){
@@ -74,12 +54,14 @@ async function HeadleCatch(client, pokemon){
       // const data = client.readQuery({ query: GET_MY_POKEMONS })
       let newPokemon = {
         name: pokemon.name,
-        nickname: nickname
+        nickname: nickname,
+        pokemon_id: pokemon.id,
+        __typename: "my_pokemons"
       }
       client.writeQuery({ 
         query: GET_MY_POKEMONS, 
         data: {
-          myPokemons: newPokemon
+          my_pokemons: newPokemon
         } 
       });
     }
@@ -91,13 +73,13 @@ async function HeadleCatch(client, pokemon){
 export function PokemonDetail(){
   const client = useApolloClient()
   let { id } = useParams();
-  const { loading, error, data } = useQuery(POKEMON_LIST, {
+  const { loading, error, data } = useQuery(POKEMON_DETAIL, {
     variables: { id: id},
     fetchPolicy: 'cache-and-network',
   });
   
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error :({console.log(error)}</p>;
+  if (error) return <p>Error :({error.message}</p>;
 
   const pokemon = data.species[0]
     
@@ -114,7 +96,7 @@ export function PokemonDetail(){
           ))}
         </Stats>
       </Card>
-      <ButtonCatch onClick={()=>HeadleCatch(client, pokemon)}>Catch</ButtonCatch>
+      <ButtonCatch onClick={()=>headleCatch(client, pokemon)}>Catch</ButtonCatch>
     </div>
   )
 }

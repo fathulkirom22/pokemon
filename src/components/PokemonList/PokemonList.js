@@ -1,15 +1,8 @@
-import { gql, useQuery } from '@apollo/client'
+import { useEffect } from 'react'
+import { useLazyQuery } from '@apollo/client'
 import styled from '@emotion/styled'
-import { useNavigate } from "react-router-dom";
-
-const POKEMON_LIST = gql`
-  query pokemon_list {
-    species: pokemon_v2_pokemon(order_by: {name: asc}, limit: 30) {
-      name
-      id
-    }
-  }
-`
+import { useNavigate } from "react-router-dom"
+import { POKEMON_LIST } from '../GraphQLProvider'
 
 const Grid = styled.div`
   display: grid;
@@ -19,7 +12,6 @@ const Grid = styled.div`
   column-gap: 10px;
   row-gap: 15px;
 `
-
 const Card = styled.div`
   cursor: pointer;
   display: flex;
@@ -32,7 +24,6 @@ const Card = styled.div`
   box-sizing: border-box;
   border-radius: 10px;
 `
-
 const Name = styled.div`
   display: flex;
   justify-content: center;
@@ -43,7 +34,12 @@ const Name = styled.div`
   line-height: 16px;
   color: #FFFFFF;
 `
-
+const Owned = styled.div`
+  font-size: 12px;
+  line-height: 14px;
+  text-align: end;
+  padding: 5px;
+`
 const Id = styled.div`
   font-style: normal;
   font-weight: normal;
@@ -55,21 +51,26 @@ const Id = styled.div`
 
 export function PokemonList() {
   let navigate = useNavigate();
-  const { loading, error, data } = useQuery(POKEMON_LIST, {
-    fetchPolicy: 'cache-and-network',
-  });
+  const [query, { loading, error, data }] = useLazyQuery(POKEMON_LIST)
+
+  useEffect(() => {
+    query()
+  }, [query]);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error :(</p>;
+  if (error) return <p>Error :({error.message}</p>;
 
   return (
     <Grid>
-      {data.species.map(({ name, id }) => (
+      {data && data.species.map(({ name, id }) => (
         <Card onClick={() => navigate(`/pokemon/${id}`)} key={id}>
           <Id>#{id}</Id>
-          <Name>
-            {name}
-          </Name>
+          <div>
+            <Owned>Have: {data.my_pokemons.filter(elm=>elm.pokemon_id === id).length}</Owned>
+            <Name>
+              {name}
+            </Name>
+          </div>
         </Card>
       ))}
     </Grid>
