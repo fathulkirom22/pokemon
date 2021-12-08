@@ -49,6 +49,11 @@ const Id = styled.div`
   padding: 5px;
 `
 
+function CountOwned(props){
+  const count = props.data ? props.data.filter(elm=>elm.pokemon_id === props.id).length : 0
+  return count
+}
+
 export function PokemonList() {
   let navigate = useNavigate();
   const [query, { loading, error, data }] = useLazyQuery(POKEMON_LIST)
@@ -66,7 +71,7 @@ export function PokemonList() {
         <Card onClick={() => navigate(`/pokemon/${id}`)} key={id}>
           <Id>#{id}</Id>
           <div>
-            <Owned>Have: {data.my_pokemons.filter(elm=>elm.pokemon_id === id).length}</Owned>
+            <Owned>Have: <CountOwned data={data.my_pokemons} id={id}/></Owned>
             <Name>
               {name}
             </Name>
