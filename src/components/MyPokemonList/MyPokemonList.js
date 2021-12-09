@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import styled from '@emotion/styled'
 import { useLazyQuery, useApolloClient } from '@apollo/client'
 import { GET_MY_POKEMONS } from '../GraphQLProvider'
 import { useNavigate } from "react-router-dom"
+import _ from "lodash"
 
 const Title = styled.div`
   background: #FFFFFF;
@@ -69,31 +70,33 @@ const ButtonRelease = styled.div`
   border-radius: 10px;
 `
 
-async function headleRelease(client, pokemon){
-
-  let newPokemon = {
-    ...pokemon,
-    isDelete: true
-  }
-  client.writeQuery({ 
-    query: GET_MY_POKEMONS, 
-    data: {
-      my_pokemons: newPokemon
-    } 
-  });
-}
-
 export function MyPokemonList(){
 
   const client = useApolloClient()
+  const navigate = useNavigate();
   const [query, { loading, error, data }] = useLazyQuery(GET_MY_POKEMONS, {
     fetchPolicy: 'cache-only',
   })
 
+  const verify = useCallback( _.debounce(() => query(), 200),[]); // eslint-disable-line
+
+  const headleRelease = (pokemon) =>{
+    let newPokemon = {
+      ...pokemon,
+      isDelete: true
+    }
+    client.writeQuery({ 
+      query: GET_MY_POKEMONS, 
+      data: {
+        my_pokemons: newPokemon
+      } 
+    });
+  }
+
   useEffect(() => {
-    query()
-  }, [query]);
-  let navigate = useNavigate();
+    verify()
+  }, [verify]);
+
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>ERROR: {error.message}</p>;
@@ -114,7 +117,7 @@ export function MyPokemonList(){
                   {pokemon.name}
                 </Name>
               </Card>
-              <ButtonRelease onClick={()=>headleRelease(client, pokemon)}>Release</ButtonRelease>
+              <ButtonRelease onClick={()=>headleRelease(pokemon)}>Release</ButtonRelease>
             </div>
           ))}
         </Grid>

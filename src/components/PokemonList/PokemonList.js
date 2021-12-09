@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useLazyQuery } from '@apollo/client'
 import styled from '@emotion/styled'
 import { useNavigate } from "react-router-dom"
 import { POKEMON_LIST } from '../GraphQLProvider'
+import _ from "lodash"
 
 const Grid = styled.div`
   display: grid;
@@ -58,9 +59,11 @@ export function PokemonList() {
   let navigate = useNavigate();
   const [query, { loading, error, data }] = useLazyQuery(POKEMON_LIST)
 
+  const verify = useCallback( _.debounce(() => query(), 200),[]); // eslint-disable-line
+
   useEffect(() => {
-    query()
-  }, [query]);
+    verify()
+  }, [verify]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :({error.message}</p>;

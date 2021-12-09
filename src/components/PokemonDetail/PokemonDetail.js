@@ -1,8 +1,10 @@
-import { useQuery, useApolloClient } from '@apollo/client'
+import { useState } from "react";
+import { useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
 import {useParams}  from "react-router-dom"
 import { Stat } from './Stat'
-import { GET_MY_POKEMONS, POKEMON_DETAIL } from '../GraphQLProvider'
+import { POKEMON_DETAIL } from '../GraphQLProvider'
+import { ModalFailedCatchPokemon, ModalSuccessCatchPokemon } from '../Modal'
 
 const Card = styled.div`
   background: #74CB48;
@@ -44,35 +46,10 @@ const ButtonCatch = styled.div`
   font-weight: bold;
   border-radius: 10px;
 `
-
-async function headleCatch(client, pokemon){
-  const result = Math.random() < 0.5
-
-  if(result){
-    let nickname = prompt(`Success to catch pokemon ${pokemon.name}, give nickname?`)
-    if(nickname){
-      // const data = client.readQuery({ query: GET_MY_POKEMONS })
-      let newPokemon = {
-        name: pokemon.name,
-        nickname: nickname,
-        pokemon_id: pokemon.id,
-        __typename: "my_pokemons"
-      }
-      client.writeQuery({ 
-        query: GET_MY_POKEMONS, 
-        data: {
-          my_pokemons: newPokemon
-        } 
-      });
-    }
-  } else {
-    alert('Failed to catch pokemon !!!')
-  }
-}
-
 export function PokemonDetail(){
-  const client = useApolloClient()
   let { id } = useParams();
+  const [showModalFailed, setShowModalFailed] = useState(false)
+  const [showModalSuccess, setShowModalSuccess] = useState(false)
   const { loading, error, data } = useQuery(POKEMON_DETAIL, {
     variables: { id: id},
     fetchPolicy: 'cache-and-network',
@@ -82,9 +59,21 @@ export function PokemonDetail(){
   if (error) return <p>Error :({error.message}</p>;
 
   const pokemon = data.species[0]
+
+  const headleCatch = async () => {
+    const result = Math.random() < 0.5
+  
+    if(result){
+      setShowModalSuccess(true)
+    } else {
+      setShowModalFailed(true)
+    }
+  }
     
   return (
     <div>
+      <ModalSuccessCatchPokemon show={showModalSuccess} pokemon={pokemon} onClose={()=> setShowModalSuccess(false)}/>
+      <ModalFailedCatchPokemon show={showModalFailed} onClose={()=> setShowModalFailed(false)}/>
       <Card>
         <Head>
           <Name>{pokemon.name}</Name>
@@ -96,7 +85,7 @@ export function PokemonDetail(){
           ))}
         </Stats>
       </Card>
-      <ButtonCatch onClick={()=>headleCatch(client, pokemon)}>Catch</ButtonCatch>
+      <ButtonCatch onClick={()=>headleCatch(pokemon)}>Catch</ButtonCatch>
     </div>
   )
 }
